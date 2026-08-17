@@ -127,28 +127,61 @@ class MiniNPU:
         self.filters = {}
 
     #mac 연산.
+ #   def mac(self, pattern, filter_matrix):
+ #       total = 0.0
+#
+#        for row in range(pattern.size):
+ #           for col in range(pattern.size):
+  #              total += pattern.get(row, col) * filter_matrix.get(row, col)
+#
+ #       return total
+
+    # 1차원 배열을 이용한 MAC 연산 (보너스 기능2)
+  #  def mac_flat(self, pattern, filter_matrix):
+   #     pattern_flat = pattern.flatten()
+    #    filter_flat = filter_matrix.flatten()
+#
+ #       total = 0.0
+#
+ #       for i in range(len(pattern_flat)):
+  #          total += pattern_flat[i] * filter_flat[i]
+#
+ #       return total
+
+#mac 연산 합치기.if문으로 충분히 합칠수 있음.
+
     def mac(self, pattern, filter_matrix):
         total = 0.0
 
-        for row in range(pattern.size):
-            for col in range(pattern.size):
-                total += pattern.get(row, col) * filter_matrix.get(row, col)
+        if isinstance(pattern, Matrix) and isinstance(filter_matrix, Matrix):
+            if pattern.size != filter_matrix.size:
+                return None
+            for row in range(pattern.size):
+                for col in range(pattern.size):
+                    total += pattern.get(row,col) * filter_matrix.get(row,col)
 
-        return total
+            return total
 
-    # 1차원 배열을 이용한 MAC 연산 (보너스 기능2)
-    def mac_flat(self, pattern, filter_matrix):
-        pattern_flat = pattern.flatten()
-        filter_flat = filter_matrix.flatten()
+        #2차원 배열이면 재귀하게.
+        elif isinstance(pattern, list) and isinstance(filter_matrix, list):
+            if isinstance(pattern[0], list) and isinstance(filter_matrix[0], list):
+                PM = Matrix(pattern)
+                FM = Matrix(filter_matrix)
+                return self.mac(PM, FM)
 
-        total = 0.0
+            #1차원 리스트
+            if len(pattern) != len(filter_matrix):
+                return None
+            
+            for i in range(len(pattern)):
+                total += pattern[i] * filter_matrix[i]
 
-        for i in range(len(pattern_flat)):
-            total += pattern_flat[i] * filter_flat[i]
+            return total
 
-        return total
+        return None
 
-#mac 연산 합치기.if문으로 충분히 합칠수 있음.
+            
+                
 
     #비교 결과 처리.
     def decide(self, score_a, score_b, label_a, label_b):
