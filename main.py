@@ -202,6 +202,7 @@ class MiniNPU:
             if "X" not in normalized_filters:
                 errors.append("X 필터가 없습니다.")
 
+            #에러 하나라도 있으면, 필터 키 저장 안하고 continue
             if errors:
                 print(f"✗ {size_key}: " + " / ".join(errors))
                 continue
@@ -209,10 +210,12 @@ class MiniNPU:
             self.filters[size] = normalized_filters
             print(f"✓ {size_key:<7} 필터 로드 완료 (Cross, X)")
 
+    #패턴분석 메소드
     def analyze_patterns(self, data):
         results = []
         patterns = data.get("patterns")
 
+        #딕셔너리 형태인지 확인.
         if not isinstance(patterns, dict):
             results.append({
                 "case": "patterns",
@@ -221,6 +224,7 @@ class MiniNPU:
             })
             return results
 
+        #패턴 분석 결과 미리 미리 초기화.
         for key, value in patterns.items():
             result = {
                 "case": key,
@@ -232,6 +236,7 @@ class MiniNPU:
                 "expected": None
             }
 
+            #패턴 값이 딕셔너리인지 확인.
             if not isinstance(value, dict):
                 result["reason"] = "패턴 데이터 형식이 잘못되었습니다."
                 results.append(result)
@@ -239,11 +244,13 @@ class MiniNPU:
 
             parts = key.split("_")
 
+            #key값 형식 확인.
             if len(parts) != 3 or parts[0] != "size":
                 result["reason"] = "패턴 키가 size_{N}_{idx} 형식이 아닙니다."
                 results.append(result)
                 continue
 
+            #패턴 키 사이즈 숫자인지 확인.
             try:
                 size = int(parts[1])
             except ValueError:
@@ -251,30 +258,37 @@ class MiniNPU:
                 results.append(result)
                 continue
 
+            #필터키 로드 확인
             if size not in self.filters:
                 result["reason"] = f"size_{size} 필터가 정상적으로 로드되지 않았습니다."
                 results.append(result)
                 continue
 
+            #기대결과 정규화해서 변수에 저장.
             expected = normalize_label(value.get("expected"))
             result["expected"] = expected
 
+            #정규화 잘 됐는지 확인.
             if expected is None:
                 result["reason"] = "expected 라벨을 Cross/X로 변환할 수 없습니다."
                 results.append(result)
                 continue
 
+            #행렬 입력받고, 검증까지.
             pattern = Matrix(value.get("input"))
             valid, reason = pattern.validate(size)
 
+            #검증 성공여부 판별.
             if not valid:
                 result["reason"] = f"패턴 크기/형식 오류: {reason}"
                 results.append(result)
                 continue
 
+            #각 필터 값 지역 변수에 따로 초기화.
             cross_filter = self.filters[size]["Cross"]
             x_filter = self.filters[size]["X"]
 
+            #각 필터 별 스코어 계산 후, 비교결과 저장.
             cross_score = self.mac(pattern, cross_filter)
             x_score = self.mac(pattern, x_filter)
             decision = self.decide(cross_score, x_score, "Cross", "X")
@@ -293,3 +307,4 @@ class MiniNPU:
             results.append(result)
 
         return results
+
