@@ -308,3 +308,183 @@ class MiniNPU:
 
         return results
 
+    #평균 계산 시간 계산 메소드
+    def benchmark(self, pattern, filter_matrix):
+        total_time = 0.0
+
+        for _ in range(self.repeat_count):
+            start = time.perf_counter()
+            self.mac(pattern, filter_matrix)
+            end = time.perf_counter()
+            total_time += (end - start) * 1000
+
+        return total_time / self.repeat_count
+
+    #십자가 행렬 생성 메소드.
+    def create_cross_matrix(self, size):
+        data = []
+        center = size // 2
+
+        for row in range(size):
+            new_row = []
+
+            for col in range(size):
+                if row == center or col == center:
+                    new_row.append(1.0)
+                else:
+                    new_row.append(0.0)
+
+            data.append(new_row)
+
+        return Matrix(data)
+
+    #평균 계산 시간 분석 결과 출력 메소드
+    def print_performance(self, cases):
+        print("\n#---------------------------------------")
+        print(f"# 성능 분석 (평균/{self.repeat_count}회)")
+        print("#---------------------------------------")
+        print(f"{'크기':<10}{'평균 시간(ms)':>16}{'연산 횟수(N²)':>18}")
+        print("-" * 44)
+
+        for size, pattern, filter_matrix in cases:
+            avg_time = self.benchmark(pattern, filter_matrix)
+            print(f"{size}x{size:<7}{avg_time:>16.6f}{size * size:>18}")
+
+    #모드1 진행 메소드.
+    def run_user_mode(self):
+        print("\n#---------------------------------------")
+        print("# [1] 필터 입력")
+        print("#---------------------------------------")
+
+        filter_a = self.input_matrix("필터 A", 3)
+        filter_b = self.input_matrix("필터 B", 3)
+
+        print("\n✓ 필터 A 저장 완료")
+        print("✓ 필터 B 저장 완료")
+
+        print("\n#---------------------------------------")
+        print("# [2] 패턴 입력")
+        print("#---------------------------------------")
+
+        pattern = self.input_matrix("패턴", 3)
+
+        score_a = self.mac(pattern, filter_a)
+        score_b = self.mac(pattern, filter_b)
+        decision = self.decide(score_a, score_b, "A", "B")
+        average_time = self.benchmark(pattern, filter_a)
+
+        print("\n#---------------------------------------")
+        print("# [3] MAC 결과")
+        print("#---------------------------------------")
+        print(f"A 점수: {score_a}")
+        print(f"B 점수: {score_b}")
+        print(f"연산 시간(평균/{self.repeat_count}회): {average_time:.6f} ms")
+
+        if decision == "UNDECIDED":
+            print(f"판정: 판정 불가 (|A-B| < {self.epsilon})")
+        else:
+            print(f"판정: {decision}")
+
+        self.print_performance([(3, pattern, filter_a)])
+
+    #모드2 진행 메소드.
+    def run_json_mode(self):
+        data = self.load_json()
+
+        if data is None:
+            return
+
+        print("\n#---------------------------------------")
+        print("# [1] 필터 로드")
+        print("#---------------------------------------")
+
+        self.load_filters(data)
+
+        print("\n#---------------------------------------")
+        print("# [2] 패턴 분석 (라벨 정규화 적용)")
+        print("#---------------------------------------")
+
+        results = self.analyze_patterns(data)
+
+        for result in results:
+            print(f"\n--- {result['case']} ---")
+
+            #대표적으로 십자가 점수부터 none이면 데이터가 오염되었다는 뜻
+            if result.get("cross_score") is not None:
+                print(f"Cross 점수: {result['cross_score']}")
+                print(f"X 점수: {result['x_score']}")
+                print(
+                    f"판정: {result['decision']} | "
+                    f"expected: {result['expected']} | "
+                    f"{result['status']}"
+                )
+            else:
+                print(f"판정: 처리 불가 | {result['status']}")
+
+            if result["reason"]:
+                print(f"사유: {result['reason']}")
+
+        #성능분석 케이스들 저장할곳.
+        performance_cases = []
+
+        #대표 예시로 십자가 3x3 행렬 만들고 대충 비교해볼 패턴도 추가.
+        cross_3 = self.create_cross_matrix(3)
+        performance_cases.append((3, cross_3, cross_3))
+
+        for size in (5, 13, 25):
+            if size in self.filters:
+                pattern = self.create_cross_matrix(size)
+                performance_cases.append((size, pattern, self.filters[size]["Cross"]))
+
+        self.print_performance(performance_cases)
+
+        #-------------------- 결과 요약 출력. -------------------------------------------------------
+        total = len(results)
+        passed = 0
+
+        for result in results:
+            if result["status"] == "PASS":
+                passed += 1
+
+        failed = total - passed
+
+        print("\n#---------------------------------------")
+        print("# [4] 결과 요약")
+        print("#---------------------------------------")
+        print(f"총 테스트: {total}개")
+        print(f"통과: {passed}개")
+        print(f"실패: {failed}개")
+
+        if failed > 0:
+            print("\n실패 케이스:")
+
+            for result in results:
+                if result["status"] == "FAIL":
+                    print(f"- {result['case']}: {result['reason']}")
+
+
+    #시뮬레이터 메인 시작 메소드
+    def run(self):
+        print("=== Mini NPU Simulator ===")
+
+        while True:
+            print("\n[모드 선택]")
+            print("1. 사용자 입력 (3x3)")
+            print("2. data.json 분석")
+
+            choice = input("선택: ").strip()
+
+            if choice == "1":
+                self.run_user_mode()
+                break
+
+            if choice == "2":
+                self.run_json_mode()
+                break
+
+            print("입력 오류: 1 또는 2를 입력하세요.")
+
+
+if __name__ == "__main__":
+    simulator = MiniNPU()
+    simulator.run()
