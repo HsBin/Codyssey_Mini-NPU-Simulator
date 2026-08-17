@@ -5,6 +5,12 @@ DATA_FILE = "data.json"
 EPSILON = 1e-9
 REPEAT_COUNT = 10
 
+MATRIX_SCHEMA = {
+    "type": list,
+    "row_type": list,
+    "value_types": (int, float)
+}
+
 #정규화 라벨 함수.
 def normalize_label(label):
     """외부 라벨을 프로그램 내부 표준 라벨로 변환한다."""
@@ -27,28 +33,53 @@ class Matrix:
 
     def __init__(self, data):
         self.data = data
-        self.size = len(data) if isinstance(data, list) else 0
+        self.size = len(data) if isinstance(data, list) else 0 #list[list] 2차원 배열을 처음부터 if문에 적으면 더 깔끔함.
 
     #2차원 배열인지 검증하는 메소드
     def validate(self, expected_size):
-        if not isinstance(self.data, list):
-            return False, "2차원 배열(list) 형식이 아닙니다."
-
-        if len(self.data) != expected_size:
+        #행렬 자체 검사
+        if (
+            not isinstance(self.data, MATRIX_SCHEMA["type"])
+            or len(self.data) != expected_size
+        ):
             return False, f"행 개수가 {expected_size}개가 아닙니다."
 
-        for row_index, row in enumerate(self.data, start=1):
-            if not isinstance(row, list):
-                return False, f"{row_index}번째 행이 list 형식이 아닙니다."
-
-            if len(row) != expected_size:
-                return False, f"{row_index}번째 행의 열 개수가 {expected_size}개가 아닙니다."
-
-            for col_index, value in enumerate(row, start=1):
-                if isinstance(value, bool) or not isinstance(value, (int, float)):
-                    return False, f"{row_index}행 {col_index}열에 숫자가 아닌 값이 있습니다."
+        # 각 행을 하나의 반복문으로 검사
+        for row in self.data:
+            if (
+                not isinstance(row, MATRIX_SCHEMA["row_type"])
+                or len(row) != expected_size
+                or not all(
+                    isinstance(value, MATRIX_SCHEMA["value_types"])
+                    and not isinstance(value, bool)
+                    for value in row
+                )
+            ):
+                return False, f"{expected_size}x{expected_size} 숫자 행렬 형식이 아닙니다."
 
         return True, ""
+#
+#        if not isinstance(self.data, list):
+#            return False, "2차원 배열(list) 형식이 아닙니다."
+#
+#        if len(self.data) != expected_size:
+#            return False, f"행 개수가 {expected_size}개가 아닙니다."
+#
+#        for row_index, row in enumerate(self.data, start=1):
+#            if not isinstance(row, list):
+#                return False, f"{row_index}번째 행이 list 형식이 아닙니다."
+#
+#            if len(row) != expected_size:
+#                return False, f"{row_index}번째 행의 열 개수가 {expected_size}개가 아닙니다."
+#
+#            for col_index, value in enumerate(row, start=1):
+#                if isinstance(value, bool) or not isinstance(value, (int, float)):
+#                    return False, f"{row_index}행 {col_index}열에 숫자가 아닌 값이 있습니다."
+
+#        return True, ""
+
+
+#스키마 안에 2차원 매트릭스를 인자를 넣고, 스키마 안에 있는걸 매핑하는 방식으로 반복문하나로 
 
     #행렬 반환
     def get(self, row, col):
@@ -133,6 +164,8 @@ class MiniNPU:
             total += pattern_flat[i] * filter_flat[i]
 
         return total
+
+#mac 연산 합치기.if문으로 충분히 합칠수 있음.
 
     #비교 결과 처리.
     def decide(self, score_a, score_b, label_a, label_b):
@@ -240,7 +273,7 @@ class MiniNPU:
 
                 if not valid:
                     errors.append(f"{label} 필터 오류: {reason}")
-                    continue
+                    continue #continue 때문에 원인 출력이 안됨. 점프됨. 위에도 마찬가지.
 
                 #정상처리된 필터 딕셔너리에 검증된 행렬 객체 저장.
                 normalized_filters[label] = matrix
