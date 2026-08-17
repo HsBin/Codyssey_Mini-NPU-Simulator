@@ -58,30 +58,8 @@ class Matrix:
                 return False, f"{expected_size}x{expected_size} 숫자 행렬 형식이 아닙니다."
 
         return True, ""
-#
-#        if not isinstance(self.data, list):
-#            return False, "2차원 배열(list) 형식이 아닙니다."
-#
-#        if len(self.data) != expected_size:
-#            return False, f"행 개수가 {expected_size}개가 아닙니다."
-#
-#        for row_index, row in enumerate(self.data, start=1):
-#            if not isinstance(row, list):
-#                return False, f"{row_index}번째 행이 list 형식이 아닙니다."
-#
-#            if len(row) != expected_size:
-#                return False, f"{row_index}번째 행의 열 개수가 {expected_size}개가 아닙니다."
-#
-#            for col_index, value in enumerate(row, start=1):
-#                if isinstance(value, bool) or not isinstance(value, (int, float)):
-#                    return False, f"{row_index}행 {col_index}열에 숫자가 아닌 값이 있습니다."
 
-#        return True, ""
-
-
-#스키마 안에 2차원 매트릭스를 인자를 넣고, 스키마 안에 있는걸 매핑하는 방식으로 반복문하나로 
-
-    #행렬 반환
+    #행렬 특정 자리 반환
     def get(self, row, col):
         return self.data[row][col]
 
@@ -90,13 +68,18 @@ class Matrix:
     @classmethod
     def create_cross(cls, size):
         data = []
-        center = size // 2
+
+        #짝수의 경우 두줄씩 표현.
+        if size % 2 == 0:
+            centers = (size // 2 - 1, size // 2)
+        else:
+            centers = (size // 2,)
 
         for row in range(size):
             new_row = []
 
             for col in range(size):
-                if row == center or col == center:
+                if row in centers or col in centers:
                     new_row.append(1.0)
                 else:
                     new_row.append(0.0)
