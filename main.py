@@ -55,16 +55,54 @@ class Matrix:
         return self.data[row][col]
 
     #보너스 기능 대비 메소드
+    # Cross 행렬 생성
     @classmethod
-    def generate_cross(cls, size):
-        data = [[0.0 for _ in range(size)] for _ in range(size)]
+    def create_cross(cls, size):
+        data = []
         center = size // 2
 
-        for i in range(size):
-            data[center][i] = 1.0
-            data[i][center] = 1.0
+        for row in range(size):
+            new_row = []
+
+            for col in range(size):
+                if row == center or col == center:
+                    new_row.append(1.0)
+                else:
+                    new_row.append(0.0)
+
+            data.append(new_row)
 
         return cls(data)
+
+
+    # X 행렬 생성
+    @classmethod
+    def create_x(cls, size):
+        data = []
+
+        for row in range(size):
+            new_row = []
+
+            for col in range(size):
+                if row == col or row + col == size - 1:
+                    new_row.append(1.0)
+                else:
+                    new_row.append(0.0)
+
+            data.append(new_row)
+
+        return cls(data)
+
+    # 2차원 행렬을 1차원 리스트로 변환
+    def flatten(self):
+        flat_data = []
+
+        for row in self.data:
+            for value in row:
+                flat_data.append(value)
+
+        return flat_data
+
 
 class MiniNPU:
     """Mini NPU Simulator 전체 동작 담당"""
@@ -81,6 +119,18 @@ class MiniNPU:
         for row in range(pattern.size):
             for col in range(pattern.size):
                 total += pattern.get(row, col) * filter_matrix.get(row, col)
+
+        return total
+
+    # 1차원 배열을 이용한 MAC 연산 (보너스 기능2)
+    def mac_flat(self, pattern, filter_matrix):
+        pattern_flat = pattern.flatten()
+        filter_flat = filter_matrix.flatten()
+
+        total = 0.0
+
+        for i in range(len(pattern_flat)):
+            total += pattern_flat[i] * filter_flat[i]
 
         return total
 
@@ -350,6 +400,70 @@ class MiniNPU:
             avg_time = self.benchmark(pattern, filter_matrix)
             print(f"{size}x{size:<7}{avg_time:>16.6f}{size * size:>18}")
 
+    #1차원 배열 전용 성능 측정할 때 전용 메소드.(보너스기능2)
+    def mac_flat_data(self, pattern_flat, filter_flat):
+        total = 0.0
+
+        for i in range(len(pattern_flat)):
+            total += pattern_flat[i] * filter_flat[i]
+
+        return total
+
+    # 2차원 MAC과 1차원 MAC 성능 비교 메소드 (보너스기능2)
+    def compare_performance(self, pattern, filter_matrix):
+
+        # 1차원 변환은 시간 측정 전에 수행
+        pattern_flat = pattern.flatten()
+        filter_flat = filter_matrix.flatten()
+
+        # 기존 2차원 MAC 측정
+        total_2d = 0.0
+
+        for _ in range(self.repeat_count):
+            start = time.perf_counter()
+
+            self.mac(pattern, filter_matrix)
+
+            end = time.perf_counter()
+            total_2d += (end - start) * 1000
+
+        avg_2d = total_2d / self.repeat_count
+
+        # 1차원 MAC 측정
+        total_1d = 0.0
+
+        for _ in range(self.repeat_count):
+            start = time.perf_counter()
+
+            self.mac_flat_data(pattern_flat, filter_flat)
+
+            end = time.perf_counter()
+            total_1d += (end - start) * 1000
+
+        avg_1d = total_1d / self.repeat_count
+
+        return avg_2d, avg_1d
+
+    #보너스 기능 성능비교 출력.
+    def print_bonus_performance(self, cases):
+        print("\n#---------------------------------------")
+        print("# [보너스] 2차원 / 1차원 MAC 성능 비교")
+        print("#---------------------------------------")
+        print("크기 / 2차원(ms) / 1차원(ms)")
+
+        for size, pattern, filter_matrix in cases:
+            avg_2d, avg_1d = self.compare_performance(
+                pattern,
+                filter_matrix
+            )
+
+            print(
+                f"{size}x{size} / "
+                f"{avg_2d:.6f} / "
+                f"{avg_1d:.6f}"
+            )
+
+
     #모드1 진행 메소드.
     def run_user_mode(self):
         print("\n#---------------------------------------")
@@ -428,15 +542,18 @@ class MiniNPU:
         performance_cases = []
 
         #대표 예시로 십자가 3x3 행렬 만들고 대충 비교해볼 패턴도 추가.
-        cross_3 = self.create_cross_matrix(3)
+        cross_3 = Matrix.create_cross(3)
         performance_cases.append((3, cross_3, cross_3))
 
         for size in (5, 13, 25):
             if size in self.filters:
-                pattern = self.create_cross_matrix(size)
+                pattern = Matrix.create_cross(size)
                 performance_cases.append((size, pattern, self.filters[size]["Cross"]))
 
         self.print_performance(performance_cases)
+
+        # 보너스 과제: 2차원/1차원 MAC 성능 비교
+        self.print_bonus_performance(performance_cases)
 
         #-------------------- 결과 요약 출력. -------------------------------------------------------
         total = len(results)
