@@ -8,7 +8,7 @@ Python 반복문으로 MAC(Multiply-Accumulate) 연산을 직접 구현하여 Cr
 
 ## 1. 실행 방법
 
-`main.py`와 `data.json`을 같은 폴더에 둔 뒤 아래 명령으로 실행합니다.
+`main.py`, `matrix.py`, `utils.py`, `npu.py`, `data.json`을 같은 폴더에 둔 뒤 아래 명령으로 실행합니다.
 
 ```bash
 python3 main.py
