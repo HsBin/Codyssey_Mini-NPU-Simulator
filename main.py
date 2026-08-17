@@ -400,6 +400,8 @@ class MiniNPU:
             avg_time = self.benchmark(pattern, filter_matrix)
             print(f"{size}x{size:<7}{avg_time:>16.6f}{size * size:>18}")
 
+    #보너스기능2 위한 메소드들 ----------------------------------------------------------------------------------------------
+
     #1차원 배열 전용 성능 측정할 때 전용 메소드.(보너스기능2)
     def mac_flat_data(self, pattern_flat, filter_flat):
         total = 0.0
@@ -463,6 +465,44 @@ class MiniNPU:
                 f"{avg_1d:.6f}"
             )
 
+    #보너스 과제2 결과 출력전용 메소드
+    def print_generated_patterns(self, size):
+        cross = Matrix.create_cross(size)
+        x_pattern = Matrix.create_x(size)
+
+        print("\n#---------------------------------------")
+        print(f"# [보너스] {size}x{size} 패턴 생성")
+        print("#---------------------------------------")
+
+        print("\nCross 패턴")
+        for row in cross.data:
+            print(" ".join(str(int(value)) for value in row))
+
+        print("\nX 패턴")
+        for row in x_pattern.data:
+            print(" ".join(str(int(value)) for value in row))
+
+    #패턴 생성기
+    def run_pattern_generator(self):
+        print("\n=== 패턴 생성기 ===")
+
+        while True:
+            try:
+                size = int(input("생성할 패턴 크기 N: "))
+
+                if size <= 0:
+                    print("1 이상의 숫자를 입력하세요.")
+                    continue
+
+                break
+
+            except ValueError:
+                print("정수를 입력하세요.")
+
+        self.print_generated_patterns(size)
+
+
+    #보너스 과제 위한 메소드 끝 ----------------------------------------------------------------
 
     #모드1 진행 메소드.
     def run_user_mode(self):
@@ -552,9 +592,11 @@ class MiniNPU:
 
         self.print_performance(performance_cases)
 
-        # 보너스 과제: 2차원/1차원 MAC 성능 비교
+        # 보너스 과제1: 2차원/1차원 MAC 성능 비교
         self.print_bonus_performance(performance_cases)
 
+        # 보너스 2: 패턴 생성기
+        self.run_pattern_generator()
         #-------------------- 결과 요약 출력. -------------------------------------------------------
         total = len(results)
         passed = 0
@@ -600,6 +642,8 @@ class MiniNPU:
                 break
 
             print("입력 오류: 1 또는 2를 입력하세요.")
+
+
 
 
 if __name__ == "__main__":
