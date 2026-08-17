@@ -23,12 +23,6 @@ python3 main.py
 
 ### 실행 화면
 
-> 아래 위치에 프로그램 시작 화면 스크린샷을 추가합니다.
-
-```markdown
-![프로그램 시작 화면](docs/screenshots/menu.png)
-```
-
 ![프로그램 시작 화면](docs/screenshots/menu.png)
 
 ---
@@ -80,24 +74,6 @@ self.filters[5]["Cross"]
 self.filters[5]["X"]
 ```
 
-### normalize_label()을 클래스 밖에 둔 이유
-
-JSON에서는 동일한 의미의 라벨이 서로 다른 문자열로 표현될 수 있습니다.
-
-```text
-+      → Cross
-cross  → Cross
-x      → X
-```
-
-`normalize_label()`은 행렬의 상태나 MiniNPU 객체의 상태를 변경하지 않고 문자열 하나를 표준 라벨로 변환하는 독립적인 기능입니다.
-
-따라서 특정 클래스에 포함시키지 않고 별도의 함수로 분리하였습니다.
-
-이렇게 하면 필터 키와 expected 값을 동일한 함수로 변환할 수 있고 라벨 변환 코드의 중복도 줄일 수 있습니다.
-
----
-
 ## 3. 모드 1 - 사용자 입력 (3×3)
 
 사용자로부터 다음 데이터를 직접 입력받습니다.
@@ -148,9 +124,7 @@ row = list(map(float, input().split()))
 
 > 3×3 Cross/X 필터와 패턴을 정상 입력한 결과 화면을 캡처합니다.
 
-```markdown
-![모드1 정상 실행](docs/screenshots/mode1_result.png)
-```
+
 
 ![모드1 정상 실행](docs/screenshots/mode1_result.png)
 
@@ -158,9 +132,6 @@ row = list(map(float, input().split()))
 
 > 숫자가 아닌 값을 입력하거나 열 개수를 틀리게 입력한 뒤 재입력이 동작하는 화면을 캡처합니다.
 
-```markdown
-![모드1 입력 오류 처리](docs/screenshots/mode1_error.png)
-```
 
 ![모드1 입력 오류 처리](docs/screenshots/mode1_error.png)
 
@@ -305,9 +276,7 @@ self.filters[13]["X"]
 
 ### 모드 2 필터 로드 스크린샷
 
-```markdown
-![필터 로드](docs/screenshots/filter_load.png)
-```
+
 
 ![필터 로드](docs/screenshots/filter_load.png)
 
@@ -315,9 +284,7 @@ self.filters[13]["X"]
 
 > Cross 점수, X 점수, 판정, expected, PASS/FAIL이 보이도록 캡처합니다.
 
-```markdown
-![JSON 패턴 분석](docs/screenshots/json_analysis.png)
-```
+
 
 ![JSON 패턴 분석](docs/screenshots/json_analysis.png)
 
@@ -431,9 +398,7 @@ end
 
 > 3×3, 5×5, 13×13, 25×25의 평균 시간과 N²가 모두 보이도록 캡처합니다.
 
-```markdown
-![성능 분석](docs/screenshots/performance.png)
-```
+
 
 ![성능 분석](docs/screenshots/performance.png)
 
@@ -512,10 +477,6 @@ for i in range(len(pattern_flat)):
 ### 2차원 / 1차원 MAC 성능 비교 스크린샷
 
 > 실제 실행 결과의 비교 표를 캡처합니다.
-
-```markdown
-![2D 1D 성능 비교](docs/screenshots/bonus_performance.png)
-```
 
 ![2D 1D 성능 비교](docs/screenshots/bonus_performance.png)
 
@@ -597,9 +558,6 @@ if row == col or row + col == size - 1:
 
 > Cross와 X 자동 생성 결과가 보이도록 캡처합니다.
 
-```markdown
-![패턴 생성기](docs/screenshots/pattern_generator.png)
-```
 
 ![패턴 생성기](docs/screenshots/pattern_generator.png)
 
