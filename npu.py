@@ -2,7 +2,7 @@ import json
 import time
 
 from matrix import Matrix
-from utils import DATA_FILE, EPSILON, REPEAT_COUNT, normalize_label
+from utils import DATA_FILE, EPSILON, REPEAT_COUNT, normalize_label, FILTER_SIZES
 
 class MiniNPU:
     """Mini NPU Simulator 전체 동작 담당"""
@@ -122,7 +122,7 @@ class MiniNPU:
             return
 
         #사이즈별로 키 이름에 맞춰서 초기화.
-        for size in (5, 13, 25):
+        for size in FILTER_SIZES:
             size_key = f"size_{size}"
             filter_group = raw_filters.get(size_key)
 
@@ -408,8 +408,30 @@ class MiniNPU:
         print("# [1] 필터 입력")
         print("#---------------------------------------")
 
-        filter_a = self.input_matrix("필터 A", 3)
-        filter_b = self.input_matrix("필터 B", 3)
+        while True:
+            print("\n필터를 자동 생성하시겠습니까?")
+            print("1. 예")
+            print("2. 아니오")
+
+            choice = input("선택: ").strip()
+
+            # 자동 생성
+            if choice == "1":
+                filter_a = Matrix.create_cross(3)
+                filter_b = Matrix.create_x(3)
+
+                print("✓ 필터 A: Cross 3x3 자동 생성 완료")
+                print("✓ 필터 B: X 3x3 자동 생성 완료")
+                break
+
+            # 직접 입력
+            elif choice == "2":
+                filter_a = self.input_matrix("필터 A", 3)
+                filter_b = self.input_matrix("필터 B", 3)
+                break
+
+            else:
+                print("입력 오류: 1 또는 2를 입력하세요.")
 
         print("\n✓ 필터 A 저장 완료")
         print("✓ 필터 B 저장 완료")
@@ -483,7 +505,7 @@ class MiniNPU:
         cross_3 = Matrix.create_cross(3)
         performance_cases.append((3, cross_3, cross_3))
 
-        for size in (5, 13, 25):
+        for size in FILTER_SIZES:
             if size in self.filters:
                 pattern = Matrix.create_cross(size)
                 performance_cases.append((size, pattern, self.filters[size]["Cross"]))
@@ -493,7 +515,7 @@ class MiniNPU:
         # 보너스 과제1: 2차원/1차원 MAC 성능 비교
         self.print_bonus_performance(performance_cases)
 
-        # 보너스 2: 패턴 생성기
+        # 보너스 2: 패턴 생성기 보여주기용.
         self.run_pattern_generator()
         #-------------------- 결과 요약 출력. -------------------------------------------------------
         total = len(results)

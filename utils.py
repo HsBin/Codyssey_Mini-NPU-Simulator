@@ -2,6 +2,8 @@ DATA_FILE = "data.json"
 EPSILON = 1e-9
 REPEAT_COUNT = 10
 
+FILTER_SIZES = (5, 13, 25)
+
 MATRIX_SCHEMA = {
     "type": list,
     "row_type": list,
