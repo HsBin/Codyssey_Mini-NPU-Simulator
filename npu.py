@@ -280,24 +280,6 @@ class MiniNPU:
 
         return total_time / self.repeat_count
 
-    #십자가 행렬 생성 메소드.
-    def create_cross_matrix(self, size):
-        data = []
-        center = size // 2
-
-        for row in range(size):
-            new_row = []
-
-            for col in range(size):
-                if row == center or col == center:
-                    new_row.append(1.0)
-                else:
-                    new_row.append(0.0)
-
-            data.append(new_row)
-
-        return Matrix(data)
-
     #평균 계산 시간 분석 결과 출력 메소드
     def print_performance(self, cases):
         print("\n#---------------------------------------")
